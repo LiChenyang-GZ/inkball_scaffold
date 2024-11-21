@@ -15,4 +15,5 @@ gradle run
 ```
 
 The game will be like this:
+
 ![图片](https://github.com/user-attachments/assets/5cae2f37-7a34-4d88-892b-7c1157f96859)
