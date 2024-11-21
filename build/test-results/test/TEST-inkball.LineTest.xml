@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="inkball.LineTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2024-10-25T06:43:01" hostname="DESKTOP-Q07PJTI" time="2.114">
+  <properties/>
+  <testcase name="testNotContainsPoint()" classname="inkball.LineTest" time="0.195"/>
+  <testcase name="testDraw()" classname="inkball.LineTest" time="0.196"/>
+  <testcase name="testAddPoint()" classname="inkball.LineTest" time="0.2"/>
+  <testcase name="testReflectBall()" classname="inkball.LineTest" time="0.366"/>
+  <testcase name="testContainsPoint()" classname="inkball.LineTest" time="0.318"/>
+  <testcase name="testLineCollisionSuccess()" classname="inkball.LineTest" time="0.223"/>
+  <testcase name="testBallDistanceWithLineFar()" classname="inkball.LineTest" time="0.2"/>
+  <testcase name="testBallDistanceWithLine()" classname="inkball.LineTest" time="0.202"/>
+  <testcase name="testLineCollisionFail()" classname="inkball.LineTest" time="0.199"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="inkball.BallManagerTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2024-10-25T06:43:09" hostname="DESKTOP-Q07PJTI" time="0.018">
+  <properties/>
+  <testcase name="testRemoveColorAtInvalidIndex()" classname="inkball.BallManagerTest" time="0.001"/>
+  <testcase name="testSize()" classname="inkball.BallManagerTest" time="0.001"/>
+  <testcase name="testAddColor()" classname="inkball.BallManagerTest" time="0.001"/>
+  <testcase name="testGetColorValidIndex()" classname="inkball.BallManagerTest" time="0.001"/>
+  <testcase name="testGetRemainingBallColors()" classname="inkball.BallManagerTest" time="0.001"/>
+  <testcase name="testRemoveColorAtValidIndex()" classname="inkball.BallManagerTest" time="0.001"/>
+  <testcase name="testGetColorInvalidIndex()" classname="inkball.BallManagerTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

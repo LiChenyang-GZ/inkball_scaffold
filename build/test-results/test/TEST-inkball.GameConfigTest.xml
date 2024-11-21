@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="inkball.GameConfigTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2024-10-25T06:43:15" hostname="DESKTOP-Q07PJTI" time="0.014">
+  <properties/>
+  <testcase name="testGetBallsConfig()" classname="inkball.GameConfigTest" time="0.001"/>
+  <testcase name="testGetScoreDecreaseFromWrongCapture()" classname="inkball.GameConfigTest" time="0.001"/>
+  <testcase name="testGetScoreIncreaseModifier()" classname="inkball.GameConfigTest" time="0.0"/>
+  <testcase name="testGetSpawnInterval()" classname="inkball.GameConfigTest" time="0.0"/>
+  <testcase name="testGetTime()" classname="inkball.GameConfigTest" time="0.001"/>
+  <testcase name="testGetLevelLayout()" classname="inkball.GameConfigTest" time="0.002"/>
+  <testcase name="testGetScoreIncreaseFromCapture()" classname="inkball.GameConfigTest" time="0.001"/>
+  <testcase name="testGetScoreDecreaseModifier()" classname="inkball.GameConfigTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

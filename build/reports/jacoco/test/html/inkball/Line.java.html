@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Line.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">inkball_scaffold</a> &gt; <a href="index.source.html" class="el_package">inkball</a> &gt; <span class="el_source">Line.java</span></div><h1>Line.java</h1><pre class="source lang-java linenums">package inkball;
+
+import java.util.*;
+import processing.core.PApplet; 
+
+/**
+ * The Line class represents a line made up of a series of points.
+ * It provides methods for adding points, drawing the line, detecting collisions with balls,
+ * reflecting balls off the line, and checking if a point is within the line's thickness.
+ */
+<span class="fc" id="L11">public class Line {</span>
+<span class="fc" id="L12">    protected List&lt;Vec&gt; points = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L13">    protected int thickness = 10;</span>
+
+    /**
+     * Adds a new point to the line.
+     *
+     * @param x The x-coordinate of the point to add.
+     * @param y The y-coordinate of the point to add.
+     */
+    public void addPoint(float x, float y){
+<span class="fc" id="L22">        points.add(new Vec(x, y));</span>
+<span class="fc" id="L23">    }</span>
+
+    /**
+     * Draws the line on the application canvas.
+     *
+     * @param app The application to draw to.
+     */
+    public void draw(App app){
+<span class="fc" id="L31">        app.stroke(0);</span>
+<span class="fc" id="L32">        app.strokeWeight(thickness);</span>
+
+<span class="fc bfc" id="L34" title="All 2 branches covered.">        for (int i = 0; i &lt; points.size() - 1; i++){</span>
+<span class="fc" id="L35">            Vec p1 = points.get(i);</span>
+<span class="fc" id="L36">            Vec p2 = points.get(i+1);</span>
+            // Only draw the line segment if the points are below the topbar
+<span class="pc bpc" id="L38" title="3 of 4 branches missed.">            if (p1.y &gt; App.TOPBAR &amp;&amp; p2.y &gt; App.TOPBAR) {</span>
+<span class="nc" id="L39">                app.line(p1.x, p1.y, p2.x, p2.y);</span>
+            }
+        }
+<span class="fc" id="L42">    }</span>
+
+    /**
+     * Checks if the distance between a ball and a line segment is less than the ball's radius.
+     *
+     * @param ball The ball to check for collision with the line.
+     * @param p1 The first point of the line segment.
+     * @param p2 The second point of the line segment.
+     * @return True if the ball is close enough to the line segment; false otherwise.
+     */
+    public boolean ballDistanceWithLine(Ball ball, Vec p1, Vec p2){
+<span class="fc" id="L53">        float ballCenterX = ball.getX() + ball.getRadius();</span>
+<span class="fc" id="L54">        float ballCenterY = ball.getY() + ball.getRadius();</span>
+<span class="fc" id="L55">        Vec ballCenter = new Vec(ballCenterX, ballCenterY);</span>
+<span class="fc" id="L56">        Vec ballVelocity = new Vec(ball.getXVelocity(), ball.getYVelocity());</span>
+<span class="fc" id="L57">        double distance1 = p1.distanceTo(ballCenter.add(ballVelocity));</span>
+<span class="fc" id="L58">        double distance2 = p2.distanceTo(ballCenter.add(ballVelocity));</span>
+<span class="fc" id="L59">        double distance3 = p1.distanceTo(p2) + ball.getRadius();</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">        return (distance1+distance2) &lt; distance3;</span>
+    }
+
+    /**
+     * Checks for collisions between the ball and the line segments.
+     *
+     * @param ball The ball to check for collisions.
+     * @return True if a collision is detected; false otherwise.
+     */
+    public boolean isLineCollision(Ball ball){
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        for (int i = 0; i &lt; points.size()-1; i++){</span>
+<span class="fc" id="L71">            Vec p1 = points.get(i);</span>
+<span class="fc" id="L72">            Vec p2 = points.get(i+1);</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">            if (ballDistanceWithLine(ball, p1, p2)){</span>
+<span class="fc" id="L74">                reflectBall(ball, p1, p2);</span>
+<span class="fc" id="L75">                return true;</span>
+            }
+        }
+<span class="fc" id="L78">        return false;</span>
+    }
+
+    /**
+     * Reflects a ball off a line segment based on its current position and velocity.
+     *
+     * @param ball The ball to reflect.
+     * @param p1 The first point of the line segment.
+     * @param p2 The second point of the line segment.
+     */
+    public void reflectBall(Ball ball, Vec p1, Vec p2){
+        // Cal the normal vectors of the line segment
+<span class="fc" id="L90">        Vec direction = new Vec(p2.x - p1.x, p2.y - p1.y);</span>
+<span class="fc" id="L91">        Vec[] normals = direction.perpendicular(); // obtain the normal vectors</span>
+
+        // Cal the midpoint of the line segment
+<span class="fc" id="L94">        Vec midpoint = new Vec((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);</span>
+<span class="fc" id="L95">        Vec ballPosition = new Vec(ball.getX()+ball.getRadius(), ball.getY()+ball.getRadius());</span>
+
+        // Select the closest normal to the ball's position
+        Vec selectedNormal;
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">        if (midpoint.distanceTo(ballPosition)&lt;midpoint.add(normals[0]).distanceTo(ballPosition)){</span>
+<span class="fc" id="L100">            selectedNormal = normals[0];</span>
+        } else {
+<span class="nc" id="L102">            selectedNormal = normals[1];</span>
+        }
+
+        // Calculate the new velocity for the ball
+<span class="fc" id="L106">        Vec velocity = new Vec(ball.getXVelocity(), ball.getYVelocity());</span>
+<span class="fc" id="L107">        float dotProduct = velocity.dot(selectedNormal);</span>
+        // Reflect the ball's velocity
+<span class="fc" id="L109">        float newXVelocity = velocity.x - 2 * dotProduct * selectedNormal.x;</span>
+<span class="fc" id="L110">        float newYVelocity = velocity.y - 2 * dotProduct * selectedNormal.y;</span>
+<span class="fc" id="L111">        ball.setXVelocity(newXVelocity);</span>
+<span class="fc" id="L112">        ball.setYVelocity(newYVelocity);</span>
+
+<span class="fc" id="L114">    }</span>
+
+    /**
+     * Checks if a given point (e.g., mouse position) is within the line's thickness.
+     *
+     * @param mouseX The x-coordinate of the point to check.
+     * @param mouseY The y-coordinate of the point to check.
+     * @return True if the point is within the line's thickness; false otherwise.
+     */
+    public boolean containsPoint(float mouseX, float mouseY) {
+<span class="fc bfc" id="L124" title="All 2 branches covered.">        for (int i = 0; i &lt; points.size() - 1; i++) {</span>
+<span class="fc" id="L125">            Vec p1 = points.get(i);</span>
+<span class="fc" id="L126">            Vec p2 = points.get(i + 1);</span>
+            
+            // Calculate the midpoint of the line segment
+<span class="fc" id="L129">            float closestX = (p1.x + p2.x) / 2;</span>
+<span class="fc" id="L130">            float closestY = (p1.y + p2.y) / 2;</span>
+
+            // Calculate the distance between the point and the closest point on the line segment
+<span class="fc" id="L133">            float distance = PApplet.dist(mouseX, mouseY, closestX, closestY);</span>
+<span class="fc bfc" id="L134" title="All 2 branches covered.">            if (distance &lt;= thickness / 2) {</span>
+<span class="fc" id="L135">                return true;  // Point is within the thickness of the line</span>
+            }
+        }
+<span class="fc" id="L138">        return false;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

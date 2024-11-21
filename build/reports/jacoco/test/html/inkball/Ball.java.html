@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Ball.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">inkball_scaffold</a> &gt; <a href="index.source.html" class="el_package">inkball</a> &gt; <span class="el_source">Ball.java</span></div><h1>Ball.java</h1><pre class="source lang-java linenums">package inkball;
+
+import processing.core.PImage;
+import processing.core.PVector;
+import java.util.*;
+
+/**
+ * The Ball class represents a ball in the game with properties such as position, velocity, and color.
+ * It handles movement, collision detection, and rendering of the ball.
+ */
+public class Ball {
+<span class="fc" id="L12">    private static final Random random = new Random();</span>
+<span class="fc" id="L13">    private int radius = 12;</span>
+<span class="fc" id="L14">    private float currentRadius = radius; // Current radius, may change during shrinking</span>
+    // Velocity of the ball
+    private float xVelocity;
+    private float yVelocity;
+    // Position of the ball
+    private float x;
+    private float y;
+    // Attributes of the ball
+    private String color;
+<span class="fc" id="L23">    private boolean isRemove = false;</span>
+<span class="fc" id="L24">    private boolean isAttract = false;</span>
+<span class="fc" id="L25">    private boolean isShrinking = false;</span>
+<span class="fc" id="L26">    private boolean isCaptured = false;</span>
+<span class="fc" id="L27">    private float shrinkFactor = 0.5f;</span>
+
+    /**
+     * Constructor for the Ball class.
+     * Initializes the ball's position and color, and sets random velocities.
+     *
+     * @param x The initial x-coordinate of the ball.
+     * @param y The initial y-coordinate of the ball.
+     * @param color The color of the ball.
+     */
+<span class="fc" id="L37">    public Ball(float x, float y, String color){</span>
+<span class="fc" id="L38">        this.x = x;</span>
+<span class="fc" id="L39">        this.y = y;</span>
+<span class="fc" id="L40">        this.color = color;</span>
+<span class="fc" id="L41">        this.xVelocity = (random.nextInt(2) * 2 - 1) * 2;</span>
+<span class="fc" id="L42">        this.yVelocity = (random.nextInt(2) * 2 - 1) * 2;</span>
+<span class="fc" id="L43">    }</span>
+
+    /**
+     * Gets the radius of the ball.
+     *
+     * @return The radius of the ball.
+     */
+    public int getRadius(){
+<span class="fc" id="L51">        return this.radius;</span>
+    }
+
+    /**
+     * Sets the radius of the ball.
+     *
+     * @param newRadius The new radius to set for the ball.
+     */
+    public void setRadius(int newRadius){
+<span class="fc" id="L60">        this.radius = newRadius;</span>
+<span class="fc" id="L61">    }</span>
+
+    /**
+     * Gets the current radius of the ball.
+     *
+     * @return The current radius of the ball.
+     */
+    public float getCurrentRadius(){
+<span class="fc" id="L69">        return this.currentRadius;</span>
+    }
+
+    /**
+     * Sets the current radius of the ball.
+     *
+     * @param newRadius The new current radius to set for the ball.
+     */
+    public void setCurrentRadius(float newRadius){
+<span class="fc" id="L78">        this.currentRadius = newRadius;</span>
+<span class="fc" id="L79">    }</span>
+
+    /**
+     * Gets the x-coordinate of the ball.
+     *
+     * @return The x-coordinate of the ball.
+     */
+    public float getX(){
+<span class="fc" id="L87">        return this.x;</span>
+    }
+
+    /**
+     * Sets the x-coordinate of the ball.
+     *
+     * @param x The new x-coordinate to set for the ball.
+     */
+    public void setX(float x){
+<span class="fc" id="L96">        this.x = x;</span>
+<span class="fc" id="L97">    }</span>
+
+    /**
+     * Gets the y-coordinate of the ball.
+     *
+     * @return The y-coordinate of the ball.
+     */
+    public float getY(){
+<span class="fc" id="L105">        return this.y;</span>
+    }
+
+    /**
+     * Sets the y-coordinate of the ball.
+     *
+     * @param y The new y-coordinate to set for the ball.
+     */
+    public void setY(float y){
+<span class="fc" id="L114">        this.y = y;</span>
+<span class="fc" id="L115">    }</span>
+
+    /**
+     * Gets the current x-velocity of the ball.
+     *
+     * @return The x-velocity of the ball.
+     */
+    public float getXVelocity(){
+<span class="fc" id="L123">        return this.xVelocity;</span>
+    }
+
+    /**
+     * Gets the current y-velocity of the ball.
+     *
+     * @return The y-velocity of the ball.
+     */
+    public float getYVelocity(){
+<span class="fc" id="L132">        return this.yVelocity;</span>
+    }
+
+    /**
+     * Reverses the x-velocity of the ball.
+     */
+    public void reverseXVelocity(){
+<span class="fc" id="L139">        this.xVelocity *= -1;</span>
+<span class="fc" id="L140">    }</span>
+
+    /**
+     * Reverses the y-velocity of the ball.
+     */
+    public void reverseYVelocity(){
+<span class="fc" id="L146">        this.yVelocity *= -1;</span>
+<span class="fc" id="L147">    }</span>
+
+    /**
+     * Sets a new x-velocity for the ball.
+     *
+     * @param newXVelocity The new x-velocity to set for the ball.
+     */
+    public void setXVelocity(float newXVelocity){
+<span class="fc" id="L155">        this.xVelocity = newXVelocity;</span>
+<span class="fc" id="L156">    }</span>
+
+    /**
+     * Sets a new y-velocity for the ball.
+     *
+     * @param newYVelocity The new y-velocity to set for the ball.
+     */
+    public void setYVelocity(float newYVelocity){
+<span class="fc" id="L164">        this.yVelocity = newYVelocity;</span>
+<span class="fc" id="L165">    }</span>
+
+    /**
+     * Gets the color of the ball.
+     *
+     * @return The color of the ball.
+     */
+    public String getColor(){
+<span class="fc" id="L173">        return this.color;</span>
+    }
+
+    /**
+     * Sets the color of the ball.
+     *
+     * @param color The new color to set for the ball.
+     */
+    public void setColor(String color){
+<span class="fc" id="L182">        this.color = color;</span>
+<span class="fc" id="L183">    }</span>
+
+    /**
+     * Checks if the ball is marked for removal.
+     *
+     * @return True if the ball is marked for removal, false otherwise.
+     */
+    public boolean isRemove(){
+<span class="fc" id="L191">        return this.isRemove;</span>
+    }
+
+    /**
+     * Marks the ball for removal.
+     */
+    public void removeBall(){
+<span class="fc" id="L198">        this.isRemove = true;</span>
+<span class="fc" id="L199">    }</span>
+
+    /**
+     * Checks if the ball is attracted.
+     *
+     * @return True if the ball is being attracted, false otherwise.
+     */
+    public boolean isAttract(){
+<span class="fc" id="L207">        return this.isAttract;</span>
+    }
+
+    /**
+     * Sets the attraction state of the ball.
+     *
+     * @param attracted True to attract the ball, false otherwise.
+     */
+    public void attractBall(boolean attracted){
+<span class="fc" id="L216">        this.isAttract = attracted;</span>
+<span class="fc" id="L217">    }</span>
+
+    /**
+     * Sets the shrinking state of the ball.
+     *
+     * @param shrinking True to set the ball as shrinking, false otherwise.
+     */
+    public void setShrinking(boolean shrinking) {
+<span class="fc" id="L225">        this.isShrinking = shrinking; // Set the shrinking state</span>
+<span class="fc" id="L226">    }</span>
+
+    /**
+     * Checks if the ball is currently shrinking.
+     *
+     * @return True if the ball is shrinking, false otherwise.
+     */
+    public boolean isShrinking() {
+<span class="fc" id="L234">        return isShrinking; // Return whether the ball is shrinking</span>
+    }
+
+    /**
+     * Shrinks the ball based on the distance from a hole.
+     *
+     * @param distance The distance from the hole used to determine the new radius.
+     */
+    public void shrink(float distance) {
+<span class="pc bpc" id="L243" title="1 of 2 branches missed.">        if (isShrinking) {</span>
+<span class="fc bfc" id="L244" title="All 2 branches covered.">            if (distance &lt; 32){</span>
+                // Adjust current radius based on distance
+<span class="fc" id="L246">                currentRadius = Math.max(0, radius * (distance/32));</span>
+            }
+            
+        }
+<span class="fc" id="L250">    }</span>
+
+    /**
+     * Checks if the ball is captured.
+     *
+     * @return True if the ball is captured, false otherwise.
+     */
+    public boolean isCaptured(){
+<span class="fc" id="L258">        return this.isCaptured;</span>
+    }
+
+    /**
+     * Sets the captured state of the ball.
+     *
+     * @param captured True to capture the ball, false otherwise.
+     */
+    public void capturedBall(boolean captured){
+<span class="fc" id="L267">        this.isCaptured = captured;</span>
+<span class="fc" id="L268">    }</span>
+
+    /**
+     * Updates the position of the ball based on its velocity.
+     * This method should be called every frame to move the ball.
+     */
+    public void updatePosition(){
+        // System.out.println(&quot;Current Velocity: (&quot; + xVelocity + &quot;, &quot; + yVelocity + &quot;)&quot;);
+<span class="fc" id="L276">        this.x += xVelocity;</span>
+<span class="fc" id="L277">        this.y += yVelocity;</span>
+<span class="fc" id="L278">    }</span>
+
+    /**
+     * Checks for collisions with the boundaries of the application window.
+     * If the ball hits a boundary, its velocity is reversed.
+     */
+    public void checkCollision(){
+<span class="fc bfc" id="L285" title="All 4 branches covered.">        if (x &lt; 0 || x+2*currentRadius &gt; App.WIDTH){</span>
+<span class="fc" id="L286">            xVelocity *= -1;</span>
+        }
+<span class="fc bfc" id="L288" title="All 4 branches covered.">        if (y &lt; App.TOPBAR || y+2*currentRadius &gt; App.HEIGHT){</span>
+<span class="fc" id="L289">            yVelocity *= -1;</span>
+            // System.out.println(&quot;now the ball is in (&quot; + x + &quot;, &quot; + y + &quot;)&quot;);
+        }
+<span class="fc" id="L292">    }</span>
+
+    /**
+     * Draws the ball on the application canvas.
+     * Uses the ball's color to retrieve the appropriate image from the application.
+     *
+     * @param app The main application instance used for rendering.
+     */
+    public void draw(App app){
+<span class="fc" id="L301">        PImage image = null;</span>
+<span class="pc bpc" id="L302" title="1 of 2 branches missed.">        if (color.equals(&quot;grey&quot;)){</span>
+<span class="nc" id="L303">            image = app.getImage(&quot;ball0&quot;);</span>
+<span class="fc bfc" id="L304" title="All 2 branches covered.">        } else if (color.equals(&quot;orange&quot;)){</span>
+<span class="fc" id="L305">            image = app.getImage(&quot;ball1&quot;);</span>
+<span class="pc bpc" id="L306" title="1 of 2 branches missed.">        } else if (color.equals(&quot;blue&quot;)){</span>
+<span class="fc" id="L307">            image = app.getImage(&quot;ball2&quot;);</span>
+<span class="nc bnc" id="L308" title="All 2 branches missed.">        } else if (color.equals(&quot;green&quot;)){</span>
+<span class="nc" id="L309">            image = app.getImage(&quot;ball3&quot;);</span>
+<span class="nc bnc" id="L310" title="All 2 branches missed.">        } else if (color.equals(&quot;yellow&quot;)){</span>
+<span class="nc" id="L311">            image = app.getImage(&quot;ball4&quot;);</span>
+        } else {
+            // System.out.println(&quot;unknow ball color...&quot;);
+        }
+
+<span class="fc" id="L316">        checkCollision();  // Check whether the ball will hit the board</span>
+        // Only draw if not removed or captured
+<span class="pc bpc" id="L318" title="2 of 4 branches missed.">        if ((!this.isRemove) &amp;&amp; (!this.isCaptured)){</span>
+<span class="pc bpc" id="L319" title="1 of 2 branches missed.">            if (image != null){</span>
+<span class="fc" id="L320">                app.image(image, x, y, currentRadius * 2, currentRadius * 2);</span>
+                // System.out.println(&quot;ball image is not null&quot;);
+            } else{
+                // System.out.println(&quot;ball image is null&quot;);
+            }
+        }
+<span class="fc" id="L326">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

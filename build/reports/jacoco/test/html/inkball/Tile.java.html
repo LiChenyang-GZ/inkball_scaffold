@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Tile.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">inkball_scaffold</a> &gt; <a href="index.source.html" class="el_package">inkball</a> &gt; <span class="el_source">Tile.java</span></div><h1>Tile.java</h1><pre class="source lang-java linenums">package inkball;
+
+import processing.core.PImage;
+import processing.core.PConstants;
+import processing.core.PVector;
+
+/**
+ * The Tile class represents a tile on the game board.
+ * It handles tile properties such as position, type, and interactions with balls.
+ */
+public class Tile{
+    private int x;
+    private int y;
+    protected PImage image;
+    private String type; // The type of the tile (e.g., &quot;X&quot;, &quot;H1&quot;, etc.)
+<span class="fc" id="L16">    private boolean isHole = false;</span>
+<span class="fc" id="L17">    protected int hits = 0;  // Counter for the number of hits the tile has received</span>
+
+    /**
+     * Constructor for the Tile class.
+     * Initializes the tile's position and type.
+     *
+     * @param x The x-coordinate of the tile.
+     * @param y The y-coordinate of the tile.
+     * @param type The type of the tile.
+     */
+<span class="fc" id="L27">    public Tile(int x, int y, String type){</span>
+<span class="fc" id="L28">        this.x = x;</span>
+<span class="fc" id="L29">        this.y = y;</span>
+<span class="fc" id="L30">        this.type = type;</span>
+<span class="fc" id="L31">    }</span>
+
+    /**
+     * Sets the image for the tile.
+     *
+     * @param img The image to be set for the tile.
+     */
+    public void setImage(PImage img){
+<span class="fc" id="L39">        this.image = img;</span>
+<span class="fc" id="L40">    }</span>
+
+    /**
+     * Gets the image of the tile.
+     *
+     * @return The current image of the tile.
+     */
+    public PImage getImage(){
+<span class="fc" id="L48">        return this.image;</span>
+    }
+
+    /**
+     * Draws the tile on the App.
+     *
+     * @param app The main application to draw to.
+     */
+    public void draw(App app){
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        if (image != null){</span>
+<span class="fc" id="L58">            app.image(image, x*app.CELLSIZE, y*app.CELLHEIGHT+app.TOPBAR);</span>
+        }
+<span class="fc" id="L60">    }</span>
+
+    /**
+     * Gets the x-coordinate of the tile.
+     *
+     * @return The x-coordinate.
+     */
+    public int getX(){
+<span class="fc" id="L68">        return x;</span>
+    }
+
+    /**
+     * Gets the y-coordinate of the tile.
+     *
+     * @return The y-coordinate.
+     */
+    public int getY(){
+<span class="fc" id="L77">        return y;</span>
+    }
+
+    /**
+     * Gets the type of the tile.
+     *
+     * @return The type as a string.
+     */
+    public String getType(){
+<span class="fc" id="L86">        return this.type;</span>
+    }
+
+    /**
+     * Checks if the tile is a hole.
+     *
+     * @return True if the tile is a hole, false otherwise.
+     */
+    public boolean isHole(){
+<span class="fc" id="L95">        return this.type.startsWith(&quot;H&quot;);</span>
+    }
+
+    /**
+     * Calculates the center x-coordinate of a ball.
+     *
+     * @param ball The ball whose center x-coordinate is to be calculated.
+     * @return The center x-coordinate of the ball.
+     */
+    private float calBallCenterX(Ball ball){
+<span class="fc" id="L105">        return ball.getX() + ball.getRadius();</span>
+    }
+
+    /**
+     * Calculates the center y-coordinate of a ball.
+     *
+     * @param ball The ball whose center y-coordinate is to be calculated.
+     * @return The center y-coordinate of the ball.
+     */
+    private float calBallCenterY(Ball ball){
+<span class="fc" id="L115">        return ball.getY() + ball.getRadius();</span>
+    }
+
+    /**
+     * Gets the center position of the hole if the tile is a hole.
+     *
+     * @return A Vec representing the hole's center, or null if not a hole.
+     */
+    protected Vec getHoleCenter(){
+<span class="fc bfc" id="L124" title="All 2 branches covered.">        if (isHole()){</span>
+<span class="fc" id="L125">            return new Vec((x+1)*App.CELLSIZE, (y+1)*App.CELLHEIGHT+App.TOPBAR);</span>
+        }
+        // System.out.println(&quot;no holes in the board...&quot;);
+<span class="fc" id="L128">        return null;</span>
+    }
+
+    /**
+     * Checks if the ball overlaps with the tile.
+     *
+     * @param ball The ball to check for overlap.
+     * @return True if the ball overlaps with the tile, false otherwise.
+     */
+    public boolean isOverLap(Ball ball){
+<span class="fc" id="L138">        float ballCenterX = calBallCenterX(ball);</span>
+<span class="fc" id="L139">        float ballCenterY = calBallCenterY(ball);</span>
+<span class="fc" id="L140">        int ballRadius = ball.getRadius();</span>
+
+        // Calculate tile boundaries
+<span class="fc" id="L143">        int tileLeft = x*App.CELLSIZE;</span>
+<span class="fc" id="L144">        int tileRight = tileLeft + App.CELLSIZE;</span>
+<span class="fc" id="L145">        int tileTop = y*App.CELLHEIGHT + App.TOPBAR;</span>
+<span class="fc" id="L146">        int tileBottom = tileTop + App.CELLHEIGHT;</span>
+
+        // Check for overlap based on tile type
+<span class="fc bfc" id="L149" title="All 10 branches covered.">        if (type.equals(&quot;X&quot;) || type.equals(&quot;1&quot;) || type.equals(&quot;2&quot;) || type.equals(&quot;3&quot;) || type.equals(&quot;4&quot;)){</span>
+<span class="fc bfc" id="L150" title="All 8 branches covered.">            boolean overlap = ballCenterX + ballRadius &gt; tileLeft &amp;&amp; ballCenterX - ballRadius &lt; tileRight</span>
+                        &amp;&amp; ballCenterY + ballRadius &gt; tileTop &amp;&amp; ballCenterY - ballRadius &lt; tileBottom;
+<span class="fc" id="L152">            return overlap;</span>
+        } else{
+<span class="fc" id="L154">            return false;</span>
+        }
+    }
+
+    /**
+     * Checks for collision between the ball and the tile.
+     * Adjusts the ball's position and direction upon collision.
+     *
+     * @param ball The ball involved in the collision.
+     */
+    public void checkCollision(Ball ball){
+<span class="fc bfc" id="L165" title="All 2 branches covered.">        if (!isOverLap(ball)){ // If no overlap</span>
+<span class="fc" id="L166">            return;</span>
+        }
+        // System.out.println(&quot;the ball hit the tile!!!&quot;);
+<span class="pc bpc" id="L169" title="1 of 10 branches missed.">        if (type.equals(&quot;X&quot;) || type.equals(&quot;1&quot;) || type.equals(&quot;2&quot;) || type.equals(&quot;3&quot;) || type.equals(&quot;4&quot;)){</span>
+<span class="fc" id="L170">            float ballCenterX = calBallCenterX(ball);</span>
+<span class="fc" id="L171">            float ballCenterY = calBallCenterY(ball);</span>
+<span class="fc" id="L172">            int ballRadius = ball.getRadius();</span>
+
+            // Calculate tile boundaries
+<span class="fc" id="L175">            int tileLeft = x*App.CELLSIZE;</span>
+<span class="fc" id="L176">            int tileRight = tileLeft + App.CELLSIZE;</span>
+<span class="fc" id="L177">            int tileTop = y*App.CELLSIZE + App.TOPBAR;</span>
+<span class="fc" id="L178">            int tileBottom = tileTop + App.CELLSIZE;</span>
+
+            // Calculate distances from ball edge to the wall edges
+<span class="fc" id="L181">            float distToLeft = (ballCenterX - ballRadius) - tileLeft;</span>
+<span class="fc" id="L182">            float distToRight = tileRight - (ballCenterX + ballRadius);</span>
+<span class="fc" id="L183">            float distToTop = (ballCenterY - ballRadius) - tileTop;</span>
+<span class="fc" id="L184">            float distToBottom = tileBottom - (ballCenterY + ballRadius);</span>
+
+            // Find the minimum distance to determine the collision side
+<span class="fc" id="L187">            float minDistance = Math.min(Math.min(distToLeft, distToRight), Math.min(distToTop, distToBottom));</span>
+
+            // Reflect the ball based on the closest side and adjust its position
+<span class="fc bfc" id="L190" title="All 2 branches covered.">            if (minDistance == distToLeft) {</span>
+                // Ball hit the left side of the wall, reverse X direction
+<span class="fc" id="L192">                ball.reverseXVelocity();</span>
+<span class="fc" id="L193">                ball.setX(tileLeft - 2 * ballRadius);  // Move ball just outside the left wall boundary</span>
+<span class="fc bfc" id="L194" title="All 2 branches covered.">            } else if (minDistance == distToRight) {</span>
+                // Ball hit the right side of the wall, reverse X direction
+<span class="fc" id="L196">                ball.reverseXVelocity();</span>
+<span class="fc" id="L197">                ball.setX(tileRight);  // Move ball just outside the right wall boundary</span>
+<span class="fc bfc" id="L198" title="All 2 branches covered.">            } else if (minDistance == distToTop) {</span>
+                // Ball hit the top side of the wall, reverse Y direction
+<span class="fc" id="L200">                ball.reverseYVelocity();</span>
+<span class="fc" id="L201">                ball.setY(tileTop - 2 * ballRadius);  // Move ball just outside the top wall boundary</span>
+<span class="pc bpc" id="L202" title="1 of 2 branches missed.">            } else if (minDistance == distToBottom) {</span>
+                // Ball hit the bottom side of the wall, reverse Y direction
+<span class="fc" id="L204">                ball.reverseYVelocity();</span>
+<span class="fc" id="L205">                ball.setY(tileBottom);  // Move ball just outside the bottom wall boundary</span>
+            }
+
+            // Change ball color based on tile type
+<span class="pc bpc" id="L209" title="1 of 2 branches missed.">            if (type.equals(&quot;0&quot;)){</span>
+<span class="nc" id="L210">                ball.setColor(&quot;grey&quot;);</span>
+<span class="fc bfc" id="L211" title="All 2 branches covered.">            } else if (type.equals(&quot;1&quot;)){</span>
+<span class="fc" id="L212">                ball.setColor(&quot;orange&quot;);</span>
+<span class="fc bfc" id="L213" title="All 2 branches covered.">            } else if (type.equals(&quot;2&quot;)){</span>
+<span class="fc" id="L214">                ball.setColor(&quot;blue&quot;);</span>
+<span class="fc bfc" id="L215" title="All 2 branches covered.">            } else if (type.equals(&quot;3&quot;)){</span>
+<span class="fc" id="L216">                ball.setColor(&quot;green&quot;);</span>
+<span class="fc bfc" id="L217" title="All 2 branches covered.">            } else if (type.equals(&quot;4&quot;)){</span>
+<span class="fc" id="L218">                ball.setColor(&quot;yellow&quot;);</span>
+            }
+        }
+
+<span class="fc" id="L222">    }</span>
+
+    /**
+     * Attracts the ball towards the hole if it is within range.
+     *
+     * @param ball The ball to be attracted.
+     * @return The type of the tile if the ball is captured, null otherwise.
+     */
+    public String attractBall(Ball ball) {
+<span class="fc" id="L231">        Vec holeCenter = getHoleCenter();</span>
+<span class="pc bpc" id="L232" title="1 of 2 branches missed.">        if (holeCenter != null) {</span>
+<span class="fc" id="L233">            Vec ballCenter = new Vec(calBallCenterX(ball), calBallCenterY(ball));</span>
+<span class="fc" id="L234">            PVector direction = new PVector((holeCenter.x-ballCenter.x), (holeCenter.y-ballCenter.y)); // Calculate direction</span>
+<span class="fc" id="L235">            float distance = direction.mag(); // Get the distance to the hole</span>
+<span class="fc" id="L236">            direction.normalize(); // Normalize the direction vector</span>
+
+<span class="fc bfc" id="L238" title="All 2 branches covered.">            if (distance &lt; 32 + ball.getRadius()) {</span>
+<span class="fc" id="L239">                ball.attractBall(true); // Activate ball attraction</span>
+                
+                // Attraction force based on distance
+<span class="fc" id="L242">                float attractionForce = 0.05f * (32 + ball.getCurrentRadius() - distance);</span>
+<span class="fc" id="L243">                ball.setXVelocity(ball.getXVelocity() + direction.x * attractionForce);</span>
+<span class="fc" id="L244">                ball.setYVelocity(ball.getYVelocity() + direction.y * attractionForce);</span>
+
+                // Set shrinking behavior
+<span class="fc" id="L247">                ball.setShrinking(true);</span>
+<span class="fc" id="L248">                ball.shrink(distance);</span>
+
+                // If the ball is close enough to the hole, capture it
+<span class="pc bpc" id="L251" title="1 of 2 branches missed.">                if (distance &lt; ball.getCurrentRadius()+10) {</span>
+<span class="nc" id="L252">                    ball.setX(holeCenter.x);</span>
+<span class="nc" id="L253">                    ball.setY(holeCenter.y);</span>
+<span class="nc" id="L254">                    ball.capturedBall(true); // the ball has been captured</span>
+                    
+<span class="nc" id="L256">                    return this.type;</span>
+                }
+<span class="fc" id="L258">            } else {</span>
+<span class="fc" id="L259">                ball.setShrinking(false); // Disable shrinking if not in range</span>
+            }
+        } else {
+            // System.out.println(&quot;no holes in the board...&quot;);
+        }
+<span class="fc" id="L264">        return null;</span>
+    }
+
+    /**
+     * Handles the interaction when a ball hits the tile.
+     * Increments the hit counter and changes the tile image based on hits.
+     *
+     * @param ball The ball interacting with the tile.
+     * @param app The main application instance used for image retrieval.
+     */
+    public void hitTile(Ball ball, App app){
+<span class="fc bfc" id="L275" title="All 2 branches covered.">        if (!isOverLap(ball)){ // If no overlap, exit</span>
+<span class="fc" id="L276">            return;</span>
+        }
+        
+        // hit the wall
+        // System.out.println(&quot;the ball hit the wall...&quot;);
+<span class="pc bpc" id="L281" title="1 of 4 branches missed.">        if (type.equals(&quot;X&quot;) || app.getCodeFromColor(ball.getColor()).equals(this.type) ){</span>
+<span class="fc" id="L282">            this.hits++;</span>
+<span class="fc" id="L283">            System.out.println(&quot;hit increase to: &quot; + this.hits);</span>
+        }
+
+        // Update tile image based on hits
+<span class="fc bfc" id="L287" title="All 2 branches covered.">        if (this.hits==1){</span>
+<span class="fc bfc" id="L288" title="All 2 branches covered.">            if (this.type.equals(&quot;X&quot;)){</span>
+<span class="fc" id="L289">                this.setImage(app.getImage(&quot;cracked0&quot;));</span>
+            } else {
+<span class="fc" id="L291">                this.setImage(app.getImage(&quot;cracked&quot;+this.type));</span>
+            }            
+        }
+<span class="fc bfc" id="L294" title="All 2 branches covered.">        if (this.hits==3){ // Reset to default tile image</span>
+<span class="fc" id="L295">            this.setImage(app.getImage(&quot;tile&quot;));</span>
+<span class="fc" id="L296">            this.type = &quot;tile&quot;;</span>
+        }
+
+<span class="fc" id="L299">    }</span>
+
+    /**
+     * Sets the position of the tile and updates its image for yellow tiles.
+     *
+     * @param x The new x-coordinate of the tile.
+     * @param y The new y-coordinate of the tile.
+     * @param app The main application instance used for image retrieval.
+     */
+    public void setYellowPosition(int x, int y, App app){
+<span class="fc" id="L309">        this.x = x;</span>
+<span class="fc" id="L310">        this.y = y;</span>
+<span class="fc" id="L311">        this.setImage(app.getImage(&quot;wall4&quot;));</span>
+<span class="fc" id="L312">    }</span>
+
+    /**
+     * Marks the tile as an &quot;old&quot; position.
+     */
+    public void setOldPosition(){
+<span class="fc" id="L318">        this.type = &quot;old&quot;;</span>
+<span class="fc" id="L319">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

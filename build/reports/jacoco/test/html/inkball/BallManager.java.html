@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BallManager.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">inkball_scaffold</a> &gt; <a href="index.source.html" class="el_package">inkball</a> &gt; <span class="el_source">BallManager.java</span></div><h1>BallManager.java</h1><pre class="source lang-java linenums">package inkball;
+
+import java.util.*;
+
+/**
+ * The BallManager class manages a list of all ball colors of the level.
+ * It allows adding, removing, and retrieving colors from the list.
+ */
+public class BallManager{
+    private LinkedList&lt;String&gt; ballColors;
+
+    /**
+     * Constructor for the BallManager class.
+     * Initializes the ball manager with a list of initial colors.
+     *
+     * @param initialColors A list of colors to initialize the ball manager.
+     */
+<span class="fc" id="L18">    public BallManager(LinkedList&lt;String&gt; initialColors){</span>
+<span class="fc" id="L19">        this.ballColors = new LinkedList&lt;&gt;(initialColors);</span>
+<span class="fc" id="L20">    }</span>
+
+    /**
+     * Retrieves the color at the specified index.
+     *
+     * @param index The index of the color to retrieve.
+     * @return The color at the specified index, or an error message if out of bounds.
+     */
+    public String getColor(int index){
+<span class="fc bfc" id="L29" title="All 4 branches covered.">        if (index &gt;= 0 &amp;&amp; index &lt; ballColors.size()){</span>
+<span class="fc" id="L30">            return ballColors.get(index);</span>
+        } else {
+<span class="fc" id="L32">            return &quot;ball color out of bound...&quot;;</span>
+        }
+    }
+
+    /**
+     * Removes the color at the specified index.
+     *
+     * @param index The index of the color to remove.
+     */
+    public void removeColorAt(int index){
+<span class="fc bfc" id="L42" title="All 4 branches covered.">        if (index &gt;= 0 &amp;&amp; index &lt; ballColors.size()){</span>
+<span class="fc" id="L43">            ballColors.remove(index);</span>
+        }
+<span class="fc" id="L45">    }</span>
+
+    /**
+     * Gets the number of colors currently managed by the BallManager.
+     *
+     * @return The number of ball colors in the list.
+     */
+    public int size(){
+<span class="fc" id="L53">        return ballColors.size();</span>
+    }
+
+    /**
+     * Retrieves a list of remaining ball colors.
+     *
+     * @return A list of remaining ball colors.
+     */
+    public List&lt;String&gt; getRemainingBallColors(){
+<span class="fc" id="L62">        return new ArrayList&lt;&gt;(ballColors);</span>
+    }
+
+    /**
+     * Adds a new ball to the list of ball.
+     *
+     * @param color The color to add to the list.
+     */
+    public void addColor(String color) {
+<span class="fc" id="L71">        ballColors.add(color);</span>
+<span class="fc" id="L72">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

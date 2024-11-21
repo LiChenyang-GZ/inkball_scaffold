@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GameConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">inkball_scaffold</a> &gt; <a href="index.source.html" class="el_package">inkball</a> &gt; <span class="el_source">GameConfig.java</span></div><h1>GameConfig.java</h1><pre class="source lang-java linenums">package inkball;
+
+import processing.data.JSONArray;
+import processing.data.JSONObject;
+import java.util.*;
+
+/**
+ * The GameConfig class handles the configuration settings for the game.
+ * It loads level data and score modifiers from a specified configuration file.
+ */
+public class GameConfig{
+    private String filepath;
+    private JSONArray levels;
+    private HashMap&lt;String, Integer&gt; scoreIncreaseFromHoleCapture;
+    private HashMap&lt;String, Integer&gt; scoreDecreaseFromWrongHole;
+
+    /**
+     * Constructor for the GameConfig class.
+     * Initializes the file path and the score modifiers.
+     *
+     * @param filepath The path to the configuration file.
+     */
+<span class="fc" id="L23">    public GameConfig(String filepath){</span>
+<span class="fc" id="L24">        this.filepath = filepath;</span>
+<span class="fc" id="L25">        scoreIncreaseFromHoleCapture = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L26">        scoreDecreaseFromWrongHole = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L27">    }</span>
+
+    /**
+     * Reads the configuration from the specified file.
+     * Loads level data and score modifiers into the class variables.
+     *
+     * @param app The main application instance used for loading the JSON.
+     * @return The complete JSON configuration object.
+     */
+    public JSONObject readConfig(App app){
+<span class="fc" id="L37">        JSONObject config = app.loadJSONObject(filepath); // Load the JSON configuration</span>
+
+        // read the level config
+<span class="fc" id="L40">        levels = config.getJSONArray(&quot;levels&quot;);</span>
+        // System.out.println(levels);
+        // read score increase config
+<span class="fc" id="L43">        JSONObject scoreIncrease = config.getJSONObject(&quot;score_increase_from_hole_capture&quot;);</span>
+<span class="fc" id="L44">        JSONObject scoreDecrease = config.getJSONObject(&quot;score_decrease_from_wrong_hole&quot;);</span>
+
+        // Populate the score modifiers
+<span class="fc bfc" id="L47" title="All 2 branches covered.">        for (Object key : scoreIncrease.keys()) {</span>
+<span class="fc" id="L48">            scoreIncreaseFromHoleCapture.put((String) key, scoreIncrease.getInt((String) key));</span>
+<span class="fc" id="L49">        }</span>
+
+<span class="fc bfc" id="L51" title="All 2 branches covered.">        for (Object key : scoreDecrease.keys()) {</span>
+<span class="fc" id="L52">            scoreDecreaseFromWrongHole.put((String) key, scoreDecrease.getInt((String) key));</span>
+<span class="fc" id="L53">        }</span>
+
+<span class="fc" id="L55">        return config;</span>
+    }
+
+    // /**
+    //  * Gets the count of levels defined in the configuration.
+    //  *
+    //  * @return The number of levels.
+    //  */
+    // public int getLevelCnt(){
+    //     return levels.size();
+    // }
+
+    /**
+     * Gets the layout file name for a specific level.
+     *
+     * @param levelNumber The index of the level.
+     * @return The layout file name as a string.
+     */
+    public String getLevelLayout(int levelNumber){
+<span class="fc" id="L74">        return levels.getJSONObject(levelNumber).getString(&quot;layout&quot;);</span>
+    }
+
+    /**
+     * Gets the configuration for balls in a specific level.
+     *
+     * @param levelNumber The index of the level.
+     * @return A list of ball configurations as strings.
+     */
+    public List&lt;String&gt; getBallsConfig(int levelNumber){
+<span class="fc" id="L84">        JSONArray ballsArray = levels.getJSONObject(levelNumber).getJSONArray(&quot;balls&quot;);</span>
+<span class="fc" id="L85">        List&lt;String&gt; ballsConfig = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">        for (int i = 0; i &lt; ballsArray.size(); i++){</span>
+<span class="fc" id="L87">            ballsConfig.add(ballsArray.getString(i));</span>
+        }
+<span class="fc" id="L89">        return ballsConfig;</span>
+    }
+
+    /**
+     * Gets the spawn interval for balls in a specific level.
+     *
+     * @param levelNumber The index of the level.
+     * @return The spawn interval in milliseconds.
+     */
+    public int getSpawnInterval(int levelNumber){
+<span class="fc" id="L99">        return levels.getJSONObject(levelNumber).getInt(&quot;spawn_interval&quot;);</span>
+    }
+
+    /**
+     * Gets the time limit for a specific level.
+     *
+     * @param levelNumber The index of the level.
+     * @return The time limit in seconds, or -1 if not defined.
+     */
+    public int getTime(int levelNumber){
+<span class="fc" id="L109">        JSONObject levelConfig = levels.getJSONObject(levelNumber);</span>
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">        if (!levelConfig.isNull(&quot;time&quot;)){  // Check if time is defined</span>
+<span class="fc" id="L111">            float time = levelConfig.getInt(&quot;time&quot;);</span>
+<span class="pc bpc" id="L112" title="1 of 4 branches missed.">            if (time &gt;= 0 &amp;&amp; time == Math.floor(time)) { // Check if the time is integer</span>
+<span class="fc" id="L113">                return (int) time;</span>
+            } else {
+                // System.out.println(&quot;Invalid time format for level &quot; + levelNumber);
+            }
+        }
+<span class="fc" id="L118">        return -1;  // Return -1 if time is not defined or invalid</span>
+    }
+
+    /**
+     * Gets the score increase modifier for capturing holes in a specific level.
+     *
+     * @param levelNumber The index of the level.
+     * @return The score increase modifier as a float.
+     */
+    public float getScoreIncreaseModifier(int levelNumber) {
+<span class="fc" id="L128">        return levels.getJSONObject(levelNumber).getFloat(&quot;score_increase_from_hole_capture_modifier&quot;);</span>
+    }
+
+    /**
+     * Gets the score decrease modifier for wrong captures in a specific level.
+     *
+     * @param levelNumber The index of the level.
+     * @return The score decrease modifier as a float.
+     */
+    public float getScoreDecreaseModifier(int levelNumber) {
+<span class="fc" id="L138">        return levels.getJSONObject(levelNumber).getFloat(&quot;score_decrease_from_wrong_hole_modifier&quot;);</span>
+    }
+
+    /**
+     * Gets the score increase modifiers from hole captures.
+     *
+     * @return A map containing score increase modifiers.
+     */
+    public Map&lt;String, Integer&gt; getScoreIncreaseFromCapture() {
+<span class="fc" id="L147">        return scoreIncreaseFromHoleCapture;</span>
+    }
+
+    /**
+     * Gets the score decrease modifiers from wrong captures.
+     *
+     * @return A map containing score decrease modifiers.
+     */
+    public Map&lt;String, Integer&gt; getScoreDecreaseFromWrongCapture() {
+<span class="fc" id="L156">        return scoreDecreaseFromWrongHole;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

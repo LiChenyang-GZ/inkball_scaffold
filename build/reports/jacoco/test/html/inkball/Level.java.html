@@ -1,0 +1,663 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Level.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">inkball_scaffold</a> &gt; <a href="index.source.html" class="el_package">inkball</a> &gt; <span class="el_source">Level.java</span></div><h1>Level.java</h1><pre class="source lang-java linenums">package inkball;
+
+import processing.core.PApplet;
+import processing.core.PImage;
+import processing.data.JSONArray;
+import processing.data.JSONObject;
+
+import java.util.*;
+import java.io.*;
+
+/**
+ * The Level class represents a game level in the Inkball game.
+ * It manages the layout, score, time, balls, lines, and interactions
+ * within the level.
+ */
+public class Level {
+    // Basic elements
+    private String layout; // The layout of the level.
+    private float scoreIncreaseModifier;  // Modifier for score increase.
+    protected float scoreDecreaseModifier;  // Modifier for score decrease.
+    protected Tile[][] board;  // The game board.
+    private LinkedList&lt;String&gt; ballsConfig;  // Configuration for the balls.
+    protected BallManager ballManager;  // Manages the remaining balls in the level.
+<span class="fc" id="L24">    protected List&lt;Ball&gt; balls = new ArrayList&lt;&gt;(); // Stores the current balls on the board.</span>
+    private LevelDisplay levelDisplay;  // Displays the initial board.
+<span class="fc" id="L26">    protected List&lt;Line&gt; lines = new ArrayList&lt;&gt;(); // Stores the drawn lines.</span>
+<span class="fc" id="L27">    protected Line currentLine = null;  // The current line being drawn.</span>
+
+    // Time Variables
+    protected int totalTime; // Total time for the level.
+    protected float remainingTime; // Remaining time for the level.
+    private int spawnInterval;  // Interval for spawning new balls.
+<span class="fc" id="L33">    protected int spawnTimer = 0;  // Timer for spawning new balls.</span>
+    protected float remainingSpawnTime;  // Remaining time for the next spawn.
+<span class="fc" id="L35">    private boolean isTimeInitialized = false;  // Indicates if time is initialized.</span>
+<span class="fc" id="L36">    protected boolean pause = false;  // Indicates if the level is paused.</span>
+<span class="fc" id="L37">    protected boolean timeUp = false;  // Indicates if the level is time up.</span>
+    protected boolean timeValid; // Indicates if the time from the config is valid.
+
+    // Score Variables
+<span class="fc" id="L41">    protected int currentScore = 0; // Current score for the level.</span>
+    protected Map&lt;String, Integer&gt; scoreIncreaseConfig; // Configuration for score increases.
+    protected Map&lt;String, Integer&gt; scoreDecreaseConfig; // Configuration for score decrease
+
+    // Level finished actions elements
+    protected Tile yellowTile1;  // First yellow tile to rotate.
+    protected Tile yellowTile2;  // Second yellow tile to rotate.
+    protected List&lt;Tile&gt; yellowTiles;  // List of yellow tiles.
+<span class="fc" id="L49">    protected boolean tilesInitialized = false; // Indicates if yellow tiles are initialized.</span>
+<span class="fc" id="L50">    protected boolean isLevelFinished = false; // Indicates if all the level's actions are finished.</span>
+<span class="fc" id="L51">    protected boolean isLevelEnded = false;  // Indicates if the level has ended.</span>
+<span class="fc" id="L52">    private int frameCounter = 0; // Frame counter for managing updates.</span>
+
+    // Control variables for remaining balls movement
+<span class="fc" id="L55">    private List&lt;Float&gt; remainingBallXPositions = new ArrayList&lt;&gt;(); // X positions for remaining balls.</span>
+<span class="fc" id="L56">    private boolean startMovingRemainingBalls = false; // Indicates if remaining balls should move.</span>
+<span class="fc" id="L57">    private boolean ballShiftStarted = false; // Indicates if ball shifting has started.</span>
+<span class="fc" id="L58">    private float moveOffset = 0; // Offset for moving balls.</span>
+
+    /**
+     * Constructs a Level instance with the specified level index and configuration.
+     *
+     * @param level The index of the level.
+     * @param configObject The GameConfig object containing configuration data.
+     */
+<span class="fc" id="L66">    public Level(int level, GameConfig configObject){</span>
+<span class="fc" id="L67">        this.layout = configObject.getLevelLayout(level);</span>
+<span class="fc" id="L68">        this.spawnInterval = configObject.getSpawnInterval(level);</span>
+<span class="fc" id="L69">        this.scoreIncreaseModifier = configObject.getScoreIncreaseModifier(level);</span>
+<span class="fc" id="L70">        this.scoreDecreaseModifier = configObject.getScoreDecreaseModifier(level);</span>
+<span class="fc" id="L71">        this.ballsConfig = new LinkedList&lt;&gt;(configObject.getBallsConfig(level));</span>
+<span class="fc" id="L72">        this.scoreIncreaseConfig = configObject.getScoreIncreaseFromCapture();</span>
+<span class="fc" id="L73">        this.scoreDecreaseConfig = configObject.getScoreDecreaseFromWrongCapture();</span>
+
+<span class="fc" id="L75">        int time = configObject.getTime(level);</span>
+<span class="pc bpc" id="L76" title="1 of 2 branches missed.">        if (isValidTime(time)){</span>
+<span class="fc" id="L77">            this.totalTime = time;</span>
+        } else{
+<span class="nc" id="L79">            this.totalTime = -1; // Invalid time set to -1.</span>
+        }        
+<span class="fc" id="L81">    }</span>
+
+    /**
+     * Initializes the level by loading its display and setting up game elements.
+     *
+     * @param app The main application instance.
+     */
+    public void setupLevel(App app){
+        // load level basic elements
+<span class="fc" id="L90">        this.levelDisplay = new LevelDisplay(app, layout);</span>
+<span class="fc" id="L91">        System.out.println(&quot;load level...&quot;);</span>
+<span class="fc" id="L92">        levelDisplay.loadLevel();</span>
+<span class="fc" id="L93">        board = levelDisplay.getBoard();</span>
+<span class="fc" id="L94">        System.out.println(&quot;display level...&quot;);</span>
+<span class="fc" id="L95">        this.ballManager = new BallManager(this.ballsConfig);        </span>
+
+        // Initialize balls based on the level configuration.
+<span class="fc" id="L98">        List&lt;Tile&gt; ballTiles = levelDisplay.getBallTile();</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">        for (Tile tile: ballTiles){</span>
+            // System.out.println(&quot;the tile is in (&quot; + tile.getX() + &quot;, &quot;+tile.getY());
+<span class="fc" id="L101">            String tileType = tile.getType();</span>
+            int colorIndex;
+            try {
+<span class="fc" id="L104">                colorIndex = Integer.parseInt(tileType.substring(1));</span>
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">                if (colorIndex &lt; ballManager.size()){</span>
+<span class="nc" id="L106">                    String ballColor = ballManager.getColor(colorIndex);</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">                    if (ballColor != null){</span>
+<span class="nc" id="L108">                        balls.add(new Ball(tile.getX()*app.CELLSIZE, tile.getY()*app.CELLSIZE+app.TOPBAR, ballColor));</span>
+<span class="nc" id="L109">                        ballManager.removeColorAt(colorIndex);</span>
+                    }
+<span class="nc" id="L111">                } else{</span>
+<span class="fc" id="L112">                    System.out.println(&quot;Color index out of bounds for tile: &quot; + tileType);</span>
+                }
+<span class="nc" id="L114">            } catch (NumberFormatException e){</span>
+<span class="nc" id="L115">                System.out.println(&quot;Invalid color inex in tile type: &quot; + tileType);</span>
+<span class="fc" id="L116">            }</span>
+<span class="fc" id="L117">        }</span>
+
+        // Initialize total time
+<span class="fc" id="L120">        System.out.println(&quot;initialize time...&quot;);</span>
+<span class="fc" id="L121">        System.out.println(&quot;total time is: &quot; + totalTime);</span>
+<span class="fc bfc" id="L122" title="All 2 branches covered.">        if (!isTimeInitialized){</span>
+<span class="fc" id="L123">            remainingTime = totalTime;</span>
+<span class="fc" id="L124">            System.out.println(&quot;finish time initialized...&quot;);</span>
+<span class="fc" id="L125">            isTimeInitialized = true;</span>
+        }
+        // Initialize the spawn time
+<span class="pc bpc" id="L128" title="1 of 2 branches missed.">        if (ballManager.size() &gt; 0){</span>
+<span class="fc" id="L129">            remainingSpawnTime = spawnInterval;</span>
+        }
+        
+<span class="fc" id="L132">    }</span>
+
+    /**
+     * Draws the lines on the level.
+     *
+     * @param app App to draw to.
+     */
+    protected void drawLines(App app) {
+<span class="fc bfc" id="L140" title="All 4 branches covered.">        if (timeUp || isLevelEnded){</span>
+<span class="fc" id="L141">            return;</span>
+        }
+<span class="pc bpc" id="L143" title="1 of 2 branches missed.">        for (Line line : lines) {</span>
+<span class="nc" id="L144">            line.draw(app);</span>
+            // draw the line which the player is drawing
+<span class="nc bnc" id="L146" title="All 2 branches missed.">            if (currentLine != null) {</span>
+<span class="nc" id="L147">                currentLine.draw(app);</span>
+            }
+<span class="nc" id="L149">        }</span>
+<span class="fc" id="L150">    }</span>
+
+    /**
+     * Draws the balls on the level and updates their positions.
+     *
+     * @param app App to draw to.
+     */
+    public void drawBalls(App app){
+<span class="fc" id="L158">        List&lt;Ball&gt; ballsToRemove = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L160" title="All 2 branches covered.">        for (Ball ball : balls) {</span>
+            // Update ball position if not paused or time is up
+<span class="pc bpc" id="L162" title="2 of 4 branches missed.">            if (!pause &amp;&amp; !timeUp){</span>
+<span class="fc" id="L163">                ball.updatePosition();</span>
+            }
+            
+            // Draw the ball if it is not be removed
+<span class="pc bpc" id="L167" title="1 of 2 branches missed.">            if (!ball.isRemove()){</span>
+<span class="fc" id="L168">                ball.draw(app);</span>
+            }
+
+            // Check for captured by holes, and add scores
+<span class="fc bfc" id="L172" title="All 2 branches covered.">            for (Tile[] row : board){</span>
+<span class="fc bfc" id="L173" title="All 2 branches covered.">                for (Tile tile : row){</span>
+<span class="pc bpc" id="L174" title="1 of 4 branches missed.">                    if (tile != null &amp;&amp; (tile.isHole())){</span>
+<span class="fc" id="L175">                        String holeType = tile.attractBall(ball);</span>
+<span class="pc bpc" id="L176" title="7 of 8 branches missed.">                        if ((ball.isCaptured()) &amp;&amp; (holeType != null) &amp;&amp; (holeType.length() &gt; 1) &amp;&amp; (!ball.isRemove())){</span>
+                            // System.out.println(&quot;the remaining time is: &quot; + remainingTime);
+                            // System.out.println(&quot;the ball&quot; + ball.getColor() + &quot; has been captured by: &quot; + holeType);
+<span class="nc" id="L179">                            String holeColorChar = String.valueOf(holeType.charAt(1));</span>
+<span class="nc" id="L180">                            String holeColor = app.getColorFromCode(holeColorChar);</span>
+                            // System.out.println(&quot;calculate the score...&quot;);
+<span class="nc" id="L182">                            float scoreChange = calScoreChange(holeColor, ball);</span>
+<span class="nc" id="L183">                            currentScore += scoreChange;</span>
+<span class="nc" id="L184">                            addScoreToAPP(app, scoreChange); // add the current score to App</span>
+<span class="nc" id="L185">                            ballsToRemove.add(ball);</span>
+<span class="nc" id="L186">                            break;</span>
+                            
+                        }
+                        
+                    }
+                }
+            }
+
+            // Check for collision with tiles
+<span class="fc bfc" id="L195" title="All 2 branches covered.">            for (Tile[] row : board) {</span>
+<span class="fc bfc" id="L196" title="All 2 branches covered.">                for (Tile tile : row) {</span>
+<span class="pc bpc" id="L197" title="1 of 2 branches missed.">                    if (tile != null) {</span>
+<span class="fc" id="L198">                        tile.hitTile(ball, app);  // Check the tiles would be damaged</span>
+<span class="fc" id="L199">                        tile.checkCollision(ball); // Check for collision with tiles</span>
+                        // System.out.println(&quot;check collision with ball finished...&quot;);
+                    }
+                }
+            }
+
+            // Check for collision with lines
+<span class="pc bpc" id="L206" title="1 of 2 branches missed.">            for (Line line : lines) {</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">                if (line.isLineCollision(ball)) {</span>
+<span class="nc" id="L208">                    lines.remove(line); // Remove the colliding line</span>
+                    // System.out.println(&quot;the line was remove by the ball&quot; + ball.getColor() + &quot; at remaining time: &quot; + remainingTime);
+<span class="nc" id="L210">                    break; // only remove one line in one time</span>
+                }
+<span class="nc" id="L212">            }</span>
+
+<span class="fc" id="L214">        }</span>
+        // Remove captured balls from the main list
+<span class="pc bpc" id="L216" title="1 of 2 branches missed.">        for (Ball ball : ballsToRemove) {</span>
+<span class="nc" id="L217">            balls.remove(ball);</span>
+<span class="nc" id="L218">        }</span>
+<span class="fc" id="L219">    }</span>
+
+    /**
+     * Draws the remaining balls that have not yet been spawned.
+     *
+     * @param app App to draw to.
+     */
+    private void drawRemainingBalls(App app) {
+        // app.fill(0);
+<span class="fc" id="L228">        app.rect(10, 10, 160, 30);</span>
+<span class="fc" id="L229">        List&lt;String&gt; remainingBalls = ballManager.getRemainingBallColors();</span>
+        // System.out.println(&quot;the remaining balls are: &quot; + remainingBalls);
+<span class="fc" id="L231">        int ballCount = Math.min(remainingBalls.size(), 5);</span>
+
+<span class="pc bpc" id="L233" title="1 of 2 branches missed.">        if (!ballShiftStarted) {</span>
+<span class="fc" id="L234">            remainingBallXPositions.clear(); // Clear previous positions</span>
+<span class="fc bfc" id="L235" title="All 2 branches covered.">            for (int i = 0; i &lt; remainingBalls.size(); i++) {</span>
+<span class="fc" id="L236">                remainingBallXPositions.add(10 + (i * 30.0f)); // Calculate initial positions</span>
+            }
+        }
+
+        // Start moving balls only after spawning new ones
+<span class="fc bfc" id="L241" title="All 2 branches covered.">        if (startMovingRemainingBalls) {</span>
+<span class="fc" id="L242">            moveOffset += 1.0f;  // Increment move offset</span>
+            
+<span class="fc bfc" id="L244" title="All 2 branches covered.">            for (int i = 0; i &lt; ballCount; i++) {</span>
+<span class="fc" id="L245">                String ballColor = remainingBalls.get(i);</span>
+<span class="fc" id="L246">                PImage ballImage = app.getBallImage(ballColor);</span>
+
+                // new position = initial position - moveOffset
+<span class="fc" id="L249">                float newXPosition = remainingBallXPositions.get(i)+30.0f - moveOffset;</span>
+                // System.out.println(&quot;move the ball &quot; + ballColor);
+                // System.out.println(&quot;the new position of the ball &quot; + ballColor + &quot; is: &quot; + newXPosition);
+
+                // Stop moving if the first ball reaches the left edge
+<span class="pc bpc" id="L254" title="1 of 4 branches missed.">                if (newXPosition &lt;= 10 &amp;&amp; i == 0) {</span>
+                    // System.out.println(&quot;stop moving the ball&quot;);
+<span class="fc" id="L256">                    startMovingRemainingBalls = false;  // Stop overall movement</span>
+<span class="fc" id="L257">                    moveOffset = 0;  // Reset move variable</span>
+                }
+                // Draw the ball
+<span class="pc bpc" id="L260" title="1 of 2 branches missed.">                if (ballImage != null) {</span>
+<span class="fc" id="L261">                    app.image(ballImage, newXPosition, 10, 30, 30);</span>
+                }
+            }
+        } else {
+            // Display balls without movement
+<span class="fc bfc" id="L266" title="All 2 branches covered.">            for (int i = 0; i &lt; ballCount; i++) {</span>
+<span class="fc" id="L267">                String ballColor = remainingBalls.get(i);</span>
+<span class="fc" id="L268">                PImage ballImage = app.getBallImage(ballColor);</span>
+<span class="pc bpc" id="L269" title="1 of 2 branches missed.">                if (ballImage != null) {</span>
+<span class="fc" id="L270">                    app.image(ballImage, remainingBallXPositions.get(i), 10, 30, 30);</span>
+                }
+            }
+        }
+<span class="fc" id="L274">    }</span>
+
+    /**
+     * Draws the current score and remaining time on the screen.
+     *
+     * @param app App to draw to.
+     */
+    protected void drawScoreAndTime(App app) {
+<span class="fc" id="L282">        app.fill(0);</span>
+<span class="fc" id="L283">        app.textSize(20);</span>
+<span class="fc" id="L284">        String timeText = &quot;Time: &quot; + Math.max(0, (int)remainingTime);</span>
+<span class="fc" id="L285">        app.text(timeText, app.WIDTH - 130, 50);</span>
+<span class="fc bfc" id="L286" title="All 2 branches covered.">        if (ballManager.size() &gt; 0){ // only show the remaining spawn time if it have remaining balls</span>
+<span class="fc" id="L287">            String countDownText = String.format(&quot;%.1f&quot;, Math.max(0, remainingSpawnTime));</span>
+<span class="fc" id="L288">            app.text(countDownText, 200, 30);</span>
+        }
+        // Display paused message if the game is paused
+<span class="pc bpc" id="L291" title="4 of 8 branches missed.">        if ((pause &amp;&amp; remainingTime &gt; 0) || (pause &amp;&amp; !timeValid)){</span>
+<span class="fc" id="L292">            app.text(&quot;***PAUSED***&quot;, app.WIDTH/2-15, app.TOPBAR/2-10);</span>
+        } 
+        // Display time's up message if time runs out
+<span class="pc bpc" id="L295" title="5 of 6 branches missed.">        if (remainingTime &lt;= 0 &amp;&amp; !isLevelEnded &amp;&amp; timeValid){</span>
+<span class="nc" id="L296">            app.text(&quot;=== TIME'S UP ===&quot;, app.WIDTH/2-50, app.TOPBAR/2-10);</span>
+<span class="nc" id="L297">            this.timeUp = true;</span>
+        }
+<span class="fc" id="L299">    }</span>
+
+    /**
+     * Updates the time and spawns new balls as needed.
+     */
+    public void updateTimeAndSpawn() {
+<span class="pc bpc" id="L305" title="1 of 4 branches missed.">        if (pause || timeUp){</span>
+<span class="fc" id="L306">            return;  // Do not update if paused or time is up</span>
+        }
+
+        // Update remaining spawn time
+<span class="fc bfc" id="L310" title="All 2 branches covered.">        if (remainingSpawnTime &gt; 0) {</span>
+<span class="fc" id="L311">            remainingSpawnTime -= (1.0 / App.FPS);</span>
+        }
+
+        // Check if it's time to spawn a new ball
+<span class="fc" id="L315">        spawnTimer++;</span>
+<span class="fc bfc" id="L316" title="All 2 branches covered.">        if (spawnTimer &gt;= App.FPS * spawnInterval) {</span>
+<span class="fc" id="L317">            spawnNewBall();</span>
+<span class="fc" id="L318">            spawnTimer = 0;</span>
+        }
+
+        // Update remaining time if time valid
+<span class="fc bfc" id="L322" title="All 2 branches covered.">        if (!timeValid){</span>
+<span class="fc" id="L323">            return;</span>
+<span class="pc bpc" id="L324" title="2 of 4 branches missed.">        } else if (timeValid &amp;&amp; remainingTime &gt;= 0){</span>
+<span class="fc" id="L325">            remainingTime -= (1.0 / App.FPS);</span>
+        }
+<span class="fc" id="L327">    }</span>
+
+    /**
+     * Draws the tiles on the board.
+     * This method iterates through the board and calls the draw method on each tile.
+     * If the level has ended, it also draws the yellow tiles.
+     *
+     * @param app App to draw to.
+     */
+    protected void drawTiles(App app){
+<span class="fc bfc" id="L337" title="All 2 branches covered.">        for (Tile[] row : board){</span>
+<span class="fc bfc" id="L338" title="All 2 branches covered.">            for (Tile tile : row){</span>
+<span class="pc bpc" id="L339" title="1 of 2 branches missed.">                if (tile != null)</span>
+<span class="fc" id="L340">                    tile.draw(app);</span>
+            }
+        }
+        // If the level has ended, draw the yellow tiles
+<span class="fc bfc" id="L344" title="All 2 branches covered.">        if (isLevelEnded){</span>
+<span class="nc bnc" id="L345" title="All 2 branches missed.">            for (Tile tile : yellowTiles){</span>
+<span class="nc" id="L346">                tile.draw(app);</span>
+<span class="nc" id="L347">            }</span>
+        }
+        
+<span class="fc" id="L350">    }</span>
+
+    /**
+     * Main draw method for the level.
+     * This method sets the background and calls the methods to draw tiles, balls, remaining balls,
+     * lines, updates time and spawns new balls, and draws the score and time.
+     *
+     * @param app App to draw to..
+     */
+    public void draw(App app){
+<span class="fc" id="L360">        app.background(200);</span>
+<span class="fc" id="L361">        drawTiles(app);</span>
+<span class="fc" id="L362">        drawBalls(app);</span>
+<span class="fc" id="L363">        drawRemainingBalls(app);</span>
+<span class="fc" id="L364">        drawLines(app);</span>
+<span class="fc" id="L365">        updateTimeAndSpawn();</span>
+<span class="fc" id="L366">        drawScoreAndTime(app);</span>
+<span class="fc" id="L367">    }</span>
+
+
+    // public String getLayout() {
+    //     return layout;
+    // }
+
+    // public int getSpawnInterval() {
+    //     return spawnInterval;
+    // }
+
+    /**
+     * Gets the current score of the level.
+     *
+     * @return The current score.
+     */
+    public int getCurrentScore(){
+<span class="fc" id="L384">        return this.currentScore;</span>
+    }
+
+    // public int getLevelScore(){
+    //     if (isLevelEnded){
+    //         return this.currentScore;
+    //     } else {
+    //         return 0;
+    //     }
+    // }
+
+    // /**
+    //  * Gets the modifier for score decreases.
+    //  *
+    //  * @return The score decrease modifier.
+    //  */
+    // public float getScoreIncreaseModifier() {
+    //     return scoreIncreaseModifier;
+    // }
+
+    // public float getScoreDecreaseModifier() {
+    //     return scoreDecreaseModifier;
+    // }
+
+    /**
+     * Starts a new line at the specified coordinates.
+     *
+     * @param x The x-coordinate for the starting point of the line.
+     * @param y The y-coordinate for the starting point of the line.
+     */
+    public void startNewLine(int x, int y) {
+<span class="fc" id="L415">        currentLine = new Line();</span>
+<span class="fc" id="L416">        currentLine.addPoint(x, y);</span>
+<span class="fc" id="L417">        lines.add(currentLine);  // Add the line to the list of lines</span>
+<span class="fc" id="L418">    }</span>
+
+    /**
+     * Deletes the line that the player choose.
+     *
+     * @param x The x-coordinate of the point to check.
+     * @param y The y-coordinate of the point to check.
+     */
+    public void deleteLine(int x, int y){
+<span class="fc" id="L427">        currentLine = null;</span>
+<span class="fc bfc" id="L428" title="All 2 branches covered.">        for (int i = lines.size() - 1; i &gt;= 0; i--){</span>
+<span class="fc" id="L429">            Line line = lines.get(i);</span>
+<span class="pc bpc" id="L430" title="1 of 2 branches missed.">            if (line.containsPoint(x, y)){ // Check if the line contains the point</span>
+<span class="nc" id="L431">                lines.remove(i); //Remove the line if it does</span>
+<span class="nc" id="L432">                break;</span>
+            }
+        }
+<span class="fc" id="L435">    }</span>
+
+    /**
+     * Adds a new point to the current line if it exists.
+     *
+     * @param x The x-coordinate of the point to add.
+     * @param y The y-coordinate of the point to add.
+     */
+    public void addNewLinePoint(int x, int y) {
+<span class="fc bfc" id="L444" title="All 2 branches covered.">        if (currentLine != null) {</span>
+<span class="fc" id="L445">            currentLine.addPoint(x, y);  // Add the point to the current line</span>
+        }
+
+<span class="fc" id="L448">    }</span>
+
+    /**
+     * Resets the current line to null, indicating that a new line can be started.
+     */
+    public void addNewLine(){
+<span class="fc" id="L454">        currentLine = null;</span>
+<span class="fc" id="L455">    }</span>
+
+    /**
+     * Spawns a new ball if available in the BallManager.
+     * Selects a random spawn tile from valid options and adds the new ball to the game.
+     */
+    public void spawnNewBall(){
+<span class="pc bpc" id="L462" title="1 of 2 branches missed.">        if (ballManager.size() &gt; 0){</span>
+<span class="fc" id="L463">            String newBallColor = ballManager.getColor(0); // Get the color of the new ball</span>
+<span class="fc" id="L464">            List&lt;Tile&gt; spawnTiles = levelDisplay.getSpawnTile(); // Get valid spawn tiles</span>
+
+<span class="pc bpc" id="L466" title="1 of 2 branches missed.">            if (!spawnTiles.isEmpty()){</span>
+<span class="fc" id="L467">                Tile spawnTile = spawnTiles.get((int) (Math.random()*spawnTiles.size()));</span>
+<span class="fc" id="L468">                balls.add(new Ball(spawnTile.getX()*App.CELLSIZE, spawnTile.getY()*App.CELLSIZE+App.TOPBAR, newBallColor));</span>
+<span class="fc" id="L469">                ballManager.removeColorAt(0);</span>
+<span class="fc" id="L470">                remainingSpawnTime = spawnInterval; // update remaining spawn time</span>
+<span class="fc" id="L471">                startMovingRemainingBalls = true; // start to move the remaining ball</span>
+            } else{
+                // System.out.println(&quot;No valid spawn tile available...&quot;);
+            }
+        } else {
+            // System.out.println(&quot;No upcoming balls to spawn.&quot;);
+        }
+<span class="fc" id="L478">    }</span>
+
+    /**
+     * Checks if the capture of the ball was successful based on color matching.
+     *
+     * @param holeColor The color of the hole.
+     * @param ball The ball to check.
+     * @return True if the capture was successful, false otherwise.
+     */
+    public boolean isCaptureSuccessful(String holeColor, Ball ball) {
+<span class="fc" id="L488">        String ballColor = ball.getColor();</span>
+<span class="pc bpc" id="L489" title="2 of 6 branches missed.">        if (ballColor.equals(holeColor) || ballColor.equals(&quot;grey&quot;) || holeColor.equals(&quot;grey&quot;)){</span>
+<span class="fc" id="L490">            ball.removeBall(); // remove the ball</span>
+<span class="fc" id="L491">            System.out.println(&quot;remove the ball&quot;);</span>
+<span class="fc" id="L492">            System.out.println(&quot;Captured ball successfully!!!&quot;);</span>
+<span class="fc" id="L493">            return true;</span>
+        }
+<span class="fc" id="L495">        System.out.println(&quot;unsuccessfully capture ball...&quot;);</span>
+<span class="fc" id="L496">        ball.capturedBall(false); // Mark the ball as not captured successfully</span>
+<span class="fc" id="L497">        ball.removeBall();</span>
+<span class="fc" id="L498">        return false;</span>
+    }
+
+    /**
+     * Calculates the score change based on the hole color and ball state.
+     *
+     * @param holeColor The color of the hole.
+     * @param ball The ball being evaluated.
+     * @return The score change resulting from this interaction.
+     */
+    public float calScoreChange(String holeColor, Ball ball){
+<span class="fc bfc" id="L509" title="All 2 branches covered.">        if (!ball.isCaptured()){</span>
+<span class="fc" id="L510">            return 0;  // Return 0 if the ball is not captured</span>
+        }
+<span class="fc" id="L512">        String ballColor = ball.getColor();</span>
+<span class="fc" id="L513">        float scoreChange = 0;</span>
+<span class="pc bpc" id="L514" title="1 of 2 branches missed.">        if (isCaptureSuccessful(holeColor, ball)){</span>
+<span class="fc" id="L515">            float scoreOfHole = scoreIncreaseConfig.getOrDefault(holeColor, 0); // Get score for the hole color</span>
+<span class="fc" id="L516">            scoreChange = scoreOfHole * scoreIncreaseModifier; // Calculate score increase</span>
+            // System.out.println(&quot;the score add: &quot; + scoreChange);
+<span class="fc" id="L518">        } else {</span>
+<span class="nc" id="L519">            ballManager.addColor(ballColor); // Return the ball to the manager</span>
+<span class="nc" id="L520">            ball.attractBall(false);</span>
+            // System.out.println(&quot;add ball to ball manager&quot;);
+<span class="nc" id="L522">            float scoreOfHole = scoreDecreaseConfig.getOrDefault(holeColor, 0); // Get score decrease for the hole color</span>
+<span class="nc" id="L523">            scoreChange = -scoreOfHole * scoreDecreaseModifier; // Calculate score decrease</span>
+            // System.out.println(&quot;the score decrease: &quot; + scoreChange);
+        }
+<span class="fc" id="L526">        return scoreChange;</span>
+    } 
+
+    /**
+     * Adds the specified score to the application.
+     *
+     * @param app The main application instance.
+     * @param scoreAdded The score to add.
+     */
+    public void addScoreToAPP(App app, float scoreAdded){
+<span class="fc" id="L536">        app.addScore(scoreAdded);  // Call the app's method to add the score</span>
+<span class="fc" id="L537">    }</span>
+
+    /**
+     * Toggles the pause state of the game.
+     */
+    public void pauseTheGame(){
+<span class="fc bfc" id="L543" title="All 2 branches covered.">        this.pause = !this.pause;</span>
+<span class="fc" id="L544">        System.out.println(&quot;pause the game...&quot;);</span>
+<span class="fc" id="L545">    }</span>
+
+    // public int ballSize(){
+    //     return ballManager.size() + balls.size();
+    // }
+
+
+    /**
+     * Checks if the level has ended due to no remaining balls.
+     *
+     * @return True if the level has ended, false otherwise.
+     */
+    public boolean isLevelEnded(){
+<span class="pc bpc" id="L558" title="1 of 2 branches missed.">        if (((ballManager.size() + balls.size())==0)){  // If no balls are left</span>
+            // System.out.println(&quot;level ended!!&quot;);
+<span class="nc bnc" id="L560" title="All 2 branches missed.">            if (!tilesInitialized){</span>
+<span class="nc" id="L561">                yellowTile1 = new Tile(0, 0, &quot;roatated&quot;);</span>
+<span class="nc" id="L562">                yellowTile2 = new Tile(App.BOARD_WIDTH - 1, 17, &quot;roatated&quot;);</span>
+<span class="nc" id="L563">                yellowTiles = Arrays.asList(yellowTile1, yellowTile2);</span>
+<span class="nc" id="L564">                tilesInitialized = true;  // Mark tiles as initialized</span>
+<span class="nc" id="L565">                this.isLevelEnded = true;  // Set level as ended</span>
+<span class="nc bnc" id="L566" title="All 2 branches missed.">            } else if (!timeValid){ // no need to rotate the yello tiles</span>
+                // System.out.println(&quot;the time is invalid...&quot;);
+<span class="nc" id="L568">                this.isLevelEnded = true;</span>
+            }
+<span class="nc" id="L570">            return true;</span>
+        } else {
+<span class="fc" id="L572">            return false;</span>
+        }
+    }
+
+    /**
+     * Checks if the level is finished.
+     *
+     * @return True if the level is finished, false otherwise.
+     */
+    public boolean isLevelFinished(){
+<span class="fc" id="L582">        return this.isLevelFinished;</span>
+    }
+
+    /**
+     * Moves the yellow tiles based on their current positions.
+     *
+     * @param app The main application instance.
+     */
+    public void moveYellowTiles(App app){
+<span class="fc bfc" id="L591" title="All 2 branches covered.">        for (Tile tile : yellowTiles){</span>
+<span class="fc" id="L592">            tile.setOldPosition();</span>
+<span class="fc" id="L593">            int x = tile.getX();</span>
+<span class="fc" id="L594">            int y = tile.getY();</span>
+            // System.out.println(&quot;the old position is: &quot; + x + &quot;, &quot; + y);
+            // Determine new position based on current position
+<span class="fc bfc" id="L597" title="All 2 branches covered.">            if (x == App.BOARD_WIDTH - 1) { // right side of the board</span>
+<span class="fc bfc" id="L598" title="All 2 branches covered.">                if (y &lt; App.BOARD_HEIGHT-3){</span>
+<span class="fc" id="L599">                    y++; // move down</span>
+                } else {
+<span class="fc" id="L601">                    x--; // move left</span>
+                }
+<span class="fc bfc" id="L603" title="All 2 branches covered.">            } else if (x == 0) { // left side of the board</span>
+<span class="fc bfc" id="L604" title="All 2 branches covered.">                if (y &gt; 0){</span>
+<span class="fc" id="L605">                    y--; // move up</span>
+                } else {
+<span class="fc" id="L607">                    x++; // move right</span>
+                }
+<span class="fc bfc" id="L609" title="All 2 branches covered.">            } else if (y == App.BOARD_HEIGHT - 3){ // bottom of the board</span>
+<span class="fc" id="L610">                x--; // move left</span>
+<span class="pc bpc" id="L611" title="1 of 2 branches missed.">            } else if (y == 0){</span>
+<span class="fc" id="L612">                x++; // move right</span>
+            }
+<span class="fc" id="L614">            tile.setYellowPosition(x, y, app); // Update the yellow tile's position</span>
+<span class="fc" id="L615">        }</span>
+<span class="fc" id="L616">    }</span>
+
+    /**
+     * Adds score based on remaining time when the level is finished.
+     * It increments the score every two frames while the level is finished.
+     *
+     * @param app The main application instance.
+     */
+    public void LevelFinishedAddScore(App app){
+<span class="pc bpc" id="L625" title="1 of 2 branches missed.">        if (isLevelEnded()){</span>
+<span class="nc" id="L626">            frameCounter++;</span>
+<span class="nc bnc" id="L627" title="All 2 branches missed.">            if (remainingTime &gt; 0){</span>
+                // System.out.println(&quot;the remaining time is: &quot; + remainingTime);
+<span class="nc bnc" id="L629" title="All 2 branches missed.">                if (frameCounter % 2 == 0){ // add 1 score every 0.067s (every 2 frames)</span>
+<span class="nc" id="L630">                    app.addScore(1);</span>
+<span class="nc" id="L631">                    remainingTime -= 1;</span>
+<span class="nc" id="L632">                    moveYellowTiles(app);</span>
+                }
+                
+<span class="nc bnc" id="L635" title="All 2 branches missed.">                if (remainingTime &lt;= 0){ // Mark level as finished if remaining time runs out</span>
+<span class="nc" id="L636">                    this.isLevelFinished = true;</span>
+                }
+<span class="nc bnc" id="L638" title="All 2 branches missed.">            } else if (remainingTime == -1){ // invalid time, no need to do anything, just finished the level</span>
+<span class="nc" id="L639">                this.isLevelFinished = true;</span>
+            } else{
+<span class="nc" id="L641">                this.isLevelFinished = false;</span>
+            }   
+        }
+<span class="fc" id="L644">    }</span>
+
+    /**
+     * Check if the time is valid.
+     *
+     * @param time The time to validate.
+     * @return True if the time is valid, false otherwise.
+     */
+    protected boolean isValidTime(int time) {
+<span class="fc bfc" id="L653" title="All 2 branches covered.">        if (time &gt;= 0){</span>
+<span class="fc" id="L654">            this.timeValid = true;</span>
+<span class="fc" id="L655">            return true;</span>
+        } else{
+<span class="fc" id="L657">            this.timeValid = false;</span>
+<span class="fc" id="L658">            return false;</span>
+        }
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

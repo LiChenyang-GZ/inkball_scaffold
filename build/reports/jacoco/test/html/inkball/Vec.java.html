@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Vec.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">inkball_scaffold</a> &gt; <a href="index.source.html" class="el_package">inkball</a> &gt; <span class="el_source">Vec.java</span></div><h1>Vec.java</h1><pre class="source lang-java linenums">package inkball;
+
+/**
+ * The Vec class represents a 2D vector with x and y components.
+ * It provides methods for vector operations such as distance calculation, addition, normalization, and dot product.
+ */
+public class Vec {
+    float x;
+    float y;
+
+    /**
+     * Constructor for the Vec class.
+     * Initializes the vector with given x and y components.
+     *
+     * @param x The x component of the vector.
+     * @param y The y component of the vector.
+     */
+<span class="fc" id="L18">    public Vec(float x, float y){</span>
+<span class="fc" id="L19">        this.x = x;</span>
+<span class="fc" id="L20">        this.y = y;</span>
+<span class="fc" id="L21">    }</span>
+
+    /**
+     * Calculates the distance between this vector and another vector.
+     *
+     * @param other The other vector to calculate the distance to.
+     * @return The distance between the two vectors.
+     */
+    public float distanceTo(Vec other) {
+<span class="fc" id="L30">        return (float) Math.sqrt(Math.pow(other.x - this.x, 2) + Math.pow(other.y - this.y, 2));</span>
+    }
+
+    /**
+     * Adds another vector to this vector and returns the result.
+     *
+     * @param v The vector to add.
+     * @return A new Vec representing the sum of this vector and the given vector.
+     */
+    public Vec add(Vec v) {
+<span class="fc" id="L40">        return new Vec(this.x + v.x, this.y + v.y);</span>
+    }
+
+    /**
+     * Calculates the normal vector to this vector.
+     * Returns the normalized version of the normal vector.
+     *
+     * @return A new Vec representing the normalized normal vector.
+     */
+    public Vec normal(){
+<span class="fc" id="L50">        return new Vec(-this.y, this.x).normalize();</span>
+    }
+
+    /**
+     * Normalizes this vector, returning a unit vector in the same direction.
+     *
+     * @return A new Vec representing the normalized vector.
+     */
+    public Vec normalize(){
+<span class="fc" id="L59">        float magnitude = (float) Math.sqrt(x * x + y * y);</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">        if (magnitude == 0){</span>
+<span class="fc" id="L61">            return new Vec(0, 0);</span>
+        }
+<span class="fc" id="L63">        return new Vec(x / magnitude, y / magnitude);</span>
+    }
+
+    /**
+     * Returns the two perpendicular (normal) vectors to this vector, normalized.
+     *
+     * @return An array of two normalized perpendicular vectors.
+     */
+    public Vec[] perpendicular() {
+<span class="fc" id="L72">        Vec n1 = new Vec(-this.y, this.x);   // First normal vector</span>
+<span class="fc" id="L73">        Vec n2 = new Vec(this.y, -this.x);   // Second normal vector</span>
+<span class="fc" id="L74">        return new Vec[]{n1.normalize(), n2.normalize()}; // 杩斿洖瑙勮寖鍖栫殑娉曠嚎</span>
+    }
+
+    /**
+     * Calculates the dot product of this vector and another vector.
+     *
+     * @param other The other vector to calculate the dot product with.
+     * @return The dot product of the two vectors.
+     */
+    public float dot(Vec other) {
+<span class="fc" id="L84">        return this.x * other.x + this.y * other.y;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
